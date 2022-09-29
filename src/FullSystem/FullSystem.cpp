@@ -56,6 +56,14 @@
 
 #include <cmath>
 
+
+#include<iostream>
+#include<cstdlib>
+#include<ctime>
+
+
+#define cal_front_end_time //计算前端耗时
+
 namespace dso
 {
 int FrameHessian::instanceCounter=0;
@@ -856,9 +864,45 @@ void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
 			boost::unique_lock<boost::mutex> crlock(coarseTrackerSwapMutex);
 			CoarseTracker* tmp = coarseTracker; coarseTracker=coarseTracker_forNewKF; coarseTracker_forNewKF=tmp;
 		}
+#ifdef cal_front_end_time
+//   std::fstream fout("",std::ios::out|std::ios::app);
+//   std::fstream dso_pose_f("",std::ios::out|std::ios::app);
+//   std::fstream fout("/home/zp/output/测试报告/15_1/dso_time.txt",std::ios::out|std::ios::app);
+//   std::fstream dso_pose_f("/home/zp/output/测试报告/15_1/dso_pose.txt",std::ios::out|std::ios::app);
+//   std::fstream fout("/home/zp/output/测试报告/15_2/dso_time.txt",std::ios::out|std::ios::app);
+//   std::fstream dso_pose_f("/home/zp/output/测试报告/15_2/dso_pose.txt",std::ios::out|std::ios::app);
+
+//   std::fstream fout("/home/zp/output/测试报告/15_3/dso_time.txt",std::ios::out|std::ios::app);
+//   std::fstream dso_pose_f("/home/zp/output/测试报告/15_3/dso_pose.txt",std::ios::out|std::ios::app);
+  std::fstream fout("/home/zp/output/测试报告/16_1/dso_time.txt",std::ios::out|std::ios::app);
+  std::fstream dso_pose_f("/home/zp/output/测试报告/16_1/dso_pose.txt",std::ios::out|std::ios::app);
+  std::clock_t start1,start2,end1,end2;
+  start1=clock();		//程序开始计时
+#endif
 
 
 		Vec4 tres = trackNewCoarse(fh);
+
+
+#ifdef cal_front_end_time
+    dso_pose_f << std::setprecision(15);
+	dso_pose_f << fh->shell->timestamp <<
+		" " << fh->shell->camToWorld.translation().transpose()<<
+		" " << fh->shell->camToWorld.so3().unit_quaternion().x()<<
+		" " << fh->shell->camToWorld.so3().unit_quaternion().y()<<
+		" " << fh->shell->camToWorld.so3().unit_quaternion().z()<<
+		" " << fh->shell->camToWorld.so3().unit_quaternion().w() << "\n";
+
+  end1=clock();		//程序结束用时
+  double endtime1=(double)(end1-start1)/CLOCKS_PER_SEC;
+  // std::cout<<"Track Total time(s):"<<endtime<<std::endl;		//s为单位
+  std::cout<<std::endl<<"TrackNewCoarse time(ms):"<<endtime1*1000<<"ms"<<std::endl;	//ms为单位
+  fout << "TrackNewCoarse time:" << endtime1*1000 << "ms" << "\n";
+  fout.close();
+  dso_pose_f.close();
+
+#endif
+
 		if(!std::isfinite((double)tres[0]) || !std::isfinite((double)tres[1]) || !std::isfinite((double)tres[2]) || !std::isfinite((double)tres[3]))
         {
             printf("Initial Tracking failed: LOST!\n");
